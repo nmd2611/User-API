@@ -7,5 +7,6 @@ This is a simple User Registration and Login API developed using Node and Expres
 3. npm start       --> To start the Node server
 
 # Routes
-/api/user/register --> For registration
+/api/user/register --> For registration         
+
 /api/user.login    --> For login
