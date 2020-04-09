@@ -1,0 +1,23 @@
+//VALIDATION
+const Joi = require("@hapi/joi");
+
+const registerVal = (data) => {
+  const schema = {
+    name: Joi.string().min(6).required(),
+    email: Joi.string().email().min(6).required(),
+    password: Joi.string().min(6).required(),
+  };
+
+  return Joi.validate(data, schema);
+};
+
+const loginVal = (data) => {
+  const schema = {
+    email: Joi.string().email().min(6).required(),
+    password: Joi.string().min(6).required(),
+  };
+
+  return Joi.validate(data, schema);
+};
+
+module.exports = { registerVal, loginVal };
