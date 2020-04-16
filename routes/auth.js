@@ -4,7 +4,19 @@ const registerVal = require("../validation").registerVal;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const app = express();
+
+// body parser
+app.use(express.json());
+
 const User = require("../models/User");
+
+// get requset to /api/user
+router.get("/", async (req, res) => {
+  const list = await User.find().select("-password");
+
+  res.json(list);
+});
 
 // REGISTER ROUTE
 
@@ -13,12 +25,12 @@ router.post("/register", async (req, res) => {
 
   const { error } = registerVal(req.body);
 
-  if (error) res.status(400).send(error.details[0].message);
+  if (error) return res.status(400).json({ msg: error.details[0].message });
 
   // check if user email already exists
   const emailExists = await User.findOne({ email: req.body.email });
 
-  if (emailExists) return res.status(400).send("User already exists");
+  if (emailExists) return res.status(400).json({ msg: "User already exists" });
 
   // hash the password
   const salt = await bcrypt.genSalt(10);
@@ -33,9 +45,9 @@ router.post("/register", async (req, res) => {
   try {
     const savedUser = await u.save();
     console.log("enetred");
-    res.send(savedUser);
+    res.json({ savedUser });
   } catch (err) {
-    res.status(400).send(err);
+    res.status(400).json({ msg: err });
   }
 });
 
@@ -48,7 +60,7 @@ router.post("/login", async (req, res) => {
     email: req.body.email,
   });
 
-  if (!userExists) res.status(400).send({ message: "Invalid credentials" });
+  if (!userExists) return res.status(400).json({ msg: "Invalid credentials" });
 
   // user exists
   const unhashPass = await bcrypt.compare(
@@ -56,15 +68,17 @@ router.post("/login", async (req, res) => {
     userExists.password
   );
 
-  if (!unhashPass) res.status(400).send("Invalid credentials");
+  if (!unhashPass) return res.status(400).json({ msg: "Invalid credentials" });
 
   // USER SUCCESSFULLY LOGGED IN
 
-  const token = jwt.sign({ _id: userExists._id }, process.env.SECRET_TOKEN);
+  const token = jwt.sign({ _id: userExists._id }, process.env.SECRET_TOKEN, {
+    expiresIn: 3600, // time in seconds
+  });
 
   res.header("auth-token", token).send(token);
 
-  res.send({ message: "Login Successful" });
+  // res.send({ msg: "Login Successful" });
 });
 
 module.exports = router;
